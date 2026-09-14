@@ -5,3 +5,4 @@
 *.tbl.u*
 delete.*
 gen
+*.tsv
