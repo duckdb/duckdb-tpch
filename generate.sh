@@ -6,30 +6,43 @@ set -euxo pipefail
 
 DIR=gen/sf$SF
 DBGEN_PREFIX=tpch_tools_3.0.1/dbgen
-STREAMS=$(python3 -c "print(max(round($SF * 0.1), 1) + 1)")
+case $SF in
+    1) REFRESH_STREAMS=2 ;;
+    10) REFRESH_STREAMS=3 ;;
+    30) REFRESH_STREAMS=4 ;;
+    100) REFRESH_STREAMS=5 ;;
+    300) REFRESH_STREAMS=6 ;;
+    1000) REFRESH_STREAMS=7 ;;
+    3000) REFRESH_STREAMS=8 ;;
+    10000) REFRESH_STREAMS=9 ;;
+    30000) REFRESH_STREAMS=10 ;;
+    100000) REFRESH_STREAMS=11 ;;
+    *) echo "No REFRESH_STREAMS value defined for SF=$SF" >&2; exit 1 ;;
+esac
+
+REFRESH_STREAMS=$((REFRESH_STREAMS + 1))
+QUERY_STREAMS=$((REFRESH_STREAMS))
+
 rm -rf $DIR
 mkdir -p $DIR
 
-(cd $DBGEN_PREFIX && \
-./qgen -s $SF -p 1 > queries1.sql && \
-./qgen -s $SF -p 2 > queries2.sql && \
-./qgen -s $SF -p 3 > queries3.sql && \
-./qgen -s $SF -p 4 > queries4.sql && \
-./qgen -s $SF -p 5 > queries5.sql && \
-./qgen -s $SF -p 6 > queries6.sql && \
-./qgen -s $SF -p 7 > queries7.sql && \
-./qgen -s $SF -p 8 > queries8.sql && \
-./qgen -s $SF -p 9 > queries9.sql && \
-./qgen -s $SF -p 10 > queries10.sql && \
-./qgen -s $SF -p 11 > queries11.sql)
+cd $DBGEN_PREFIX
+for i in `seq 1 $QUERY_STREAMS`; do
+    ./qgen -s $SF -p ${i} > queries${i}.sql
+done
+cd ../..
 mv $DBGEN_PREFIX/queries*.sql $DIR
 
+# cleanup
 rm -f $DBGEN_PREFIX/*.tbl $DBGEN_PREFIX/*.tbl.u* $DBGEN_PREFIX/delete.*
-(cd $DBGEN_PREFIX && ./dbgen -s $SF)
+
+# generate static files (tbl)
+(cd $DBGEN_PREFIX && tpchgen-cli -s $SF)
 mv $DBGEN_PREFIX/*.tbl $DIR
 
-(cd $DBGEN_PREFIX && ./dbgen -s $SF -U $STREAMS)
-
+# generate refresh streams
+(cd $DBGEN_PREFIX && ./dbgen -s $SF -U $REFRESH_STREAMS)
 mv $DBGEN_PREFIX/*.tbl.u* $DBGEN_PREFIX/delete.* $DIR
 
+# convert refresh streams and delete files to Parquet
 (cd $DIR; python3 ../../convert.py)

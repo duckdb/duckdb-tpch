@@ -8,6 +8,9 @@ Install the required packages from `requirements.txt`:
 pip install -r requirements.txt
 ```
 
+Make sure that the Python packages are on your path.
+(If you've installed them to the `.local` directory, run `export PATH="$HOME/.local/bin:$PATH"`).
+
 Build the `dbgen`"
 
 ```bash
