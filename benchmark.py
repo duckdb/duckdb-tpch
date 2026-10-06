@@ -187,35 +187,24 @@ def RF2(n):
 	con.close()
 
 
-def RF(con, n):	
-	print(f"start refresh {n}")
-	con.begin()
-	lineitem = f"{datadir}/lineitem.tbl.u{n}{ext}"
-	orders = f"{datadir}/orders.tbl.u{n}{ext}"
-	delete = f"{datadir}/delete.{n}{ext}"
-	con.execute(f"INSERT INTO lineitem FROM '{lineitem}'")
-	con.execute(f"INSERT INTO orders FROM '{orders}'")
-	con.execute(f"DELETE FROM orders WHERE o_orderkey IN (SELECT column0 FROM {reader}('{delete}'))")
-	con.execute(f"DELETE FROM lineitem WHERE l_orderkey IN (SELECT column0 FROM {reader}('{delete}'))")
-	con.commit()
-	print(f"done refresh {n}")
-
-
 def timeit(fun, p):
 	start = time.time()
 	fun(p)
 	return time.time() - start
 
+# RF1 and RF2 must run as separate transactions (clause 5.3.1.7)
 def refresh(ns):
-	con = clone_connection(con0)
 	for n in ns:
-		RF(con, n)
+		print(f"start refresh {n}")
+		RF1(n)
+		RF2(n)
+		print(f"done refresh {n}")
 
 n_refresh = streams
 
 time_rf1 = timeit(RF1, 1)
 start = time.time()
-time_q = query(1)
+time_q = query(0)
 power_total_queries_duration = time.time() - start
 time_rf2 = timeit(RF2, 1)
 tpch_power_at_size = round((3600*scale_factor)/ ((time_q*time_rf1*time_rf2)**(1/24)), 2)
