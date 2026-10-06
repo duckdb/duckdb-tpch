@@ -156,7 +156,7 @@ def query(n):
 			continue
 		start = time.time()
 		con.execute("BEGIN TRANSACTION READ ONLY")
-		con.execute(q)
+		con.execute(q).fetchall()
 		con.execute("COMMIT")
 		duration = time.time() - start
 		print(f"Done query {n} {query_idx} {round(duration, 2)}")
