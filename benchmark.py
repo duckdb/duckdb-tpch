@@ -204,7 +204,7 @@ n_refresh = streams
 
 time_rf1 = timeit(RF1, 1)
 start = time.time()
-time_q = query(1)
+time_q = query(0)
 power_total_queries_duration = time.time() - start
 time_rf2 = timeit(RF2, 1)
 tpch_power_at_size = round((3600*scale_factor)/ ((time_q*time_rf1*time_rf2)**(1/24)), 2)

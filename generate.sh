@@ -27,7 +27,8 @@ rm -rf $DIR
 mkdir -p $DIR
 
 cd $DBGEN_PREFIX
-for i in `seq 1 $QUERY_STREAMS`; do
+# stream 0 is the power test, streams 1..S are the throughput test (clause 5.3.5.2)
+for i in `seq 0 $((QUERY_STREAMS - 1))`; do
     ./qgen -s $SF -p ${i} > queries${i}.sql
 done
 cd ../..
