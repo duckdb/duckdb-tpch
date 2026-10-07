@@ -145,6 +145,10 @@ con0 = get_connection(db_file)
 #con0.execute(f"SET wal_autocheckpoint='{scale_factor}MB'")
 #con0.execute("SET threads='1'")
 
+con0.execute("SET threads = 128;")
+con0.execute("SET block_allocator_memory = '600G';")
+con0.execute("SET allocator_background_threads = true;")
+
 def query(n):
 	print(f"Starting query stream {n}")
 	con = clone_connection(con0)
